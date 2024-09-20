@@ -1,0 +1,90 @@
+-- Step 1: Create Departments Table
+CREATE TABLE Departments (
+    DepartmentID INT PRIMARY KEY IDENTITY(1,1),
+    DepartmentName VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- Step 2: Create Professors Table
+CREATE TABLE Professors (
+    ProfessorID INT PRIMARY KEY IDENTITY(1,1),
+    ProfessorName VARCHAR(100) NOT NULL,
+    HireDate DATE NOT NULL,
+    DepartmentID INT FOREIGN KEY REFERENCES Departments(DepartmentID)
+);
+
+-- Step 3: Create Students Table
+CREATE TABLE Students (
+    StudentID INT PRIMARY KEY IDENTITY(1,1),
+    Name VARCHAR(100) NOT NULL,
+    DateOfBirth DATE NOT NULL,
+    DepartmentID INT FOREIGN KEY REFERENCES Departments(DepartmentID),
+    EnrollmentDate DATE NOT NULL
+);
+
+-- Step 4: Create Courses Table
+CREATE TABLE Courses (
+    CourseID INT PRIMARY KEY IDENTITY(1,1),
+    CourseName VARCHAR(100) NOT NULL,
+    CourseDescription VARCHAR(500),
+    DepartmentID INT FOREIGN KEY REFERENCES Departments(DepartmentID)
+);
+
+-- Step 5: Create CourseProfessors Table for Many-to-Many Relationship
+CREATE TABLE CourseProfessors (
+    CourseID INT FOREIGN KEY REFERENCES Courses(CourseID),
+    ProfessorID INT FOREIGN KEY REFERENCES Professors(ProfessorID),
+    PRIMARY KEY (CourseID, ProfessorID)
+);
+
+-- Step 6: Create Enrollments Table
+CREATE TABLE Enrollments (
+    EnrollmentID INT PRIMARY KEY IDENTITY(1,1),
+    StudentID INT FOREIGN KEY REFERENCES Students(StudentID),
+    CourseID INT FOREIGN KEY REFERENCES Courses(CourseID),
+    EnrollmentDate DATE NOT NULL
+);
+
+-- Step 7: Create Grades Table
+CREATE TABLE Grades (
+    GradeID INT PRIMARY KEY IDENTITY(1,1),
+    StudentID INT FOREIGN KEY REFERENCES Students(StudentID),
+    CourseID INT FOREIGN KEY REFERENCES Courses(CourseID),
+    Grade VARCHAR(2) NOT NULL,
+    GradeDate DATE NOT NULL
+);
+
+-- Step 8: Create Logins for Admin and User
+CREATE LOGIN AdminLogin WITH PASSWORD = 'AdminPass123!';
+CREATE LOGIN UserLogin WITH PASSWORD = 'UserPass123!';
+
+-- Step 9: Create Users for Admin and User
+CREATE USER Admin FOR LOGIN AdminLogin;
+CREATE USER [User] FOR LOGIN UserLogin;
+
+-- Step 10: Create Roles for Admin and User
+CREATE ROLE AdminRole;
+CREATE ROLE UserRole;
+
+-- Step 11: Add Users to Roles
+EXEC sp_addrolemember 'AdminRole', 'Admin';
+EXEC sp_addrolemember 'UserRole', 'User';
+
+-- Step 12: Grant Admin Full Control on All Tables
+GRANT SELECT, INSERT, UPDATE, DELETE ON Departments TO AdminRole;
+GRANT SELECT, INSERT, UPDATE, DELETE ON Professors TO AdminRole;
+GRANT SELECT, INSERT, UPDATE, DELETE ON Students TO AdminRole;
+GRANT SELECT, INSERT, UPDATE, DELETE ON Courses TO AdminRole;
+GRANT SELECT, INSERT, UPDATE, DELETE ON CourseProfessors TO AdminRole;
+GRANT SELECT, INSERT, UPDATE, DELETE ON Enrollments TO AdminRole;
+GRANT SELECT, INSERT, UPDATE, DELETE ON Grades TO AdminRole;
+
+-- Step 13: Grant User Read-Only Permissions (SELECT Only) on All Tables
+GRANT SELECT ON Departments TO UserRole;
+GRANT SELECT ON Professors TO UserRole;
+GRANT SELECT ON Students TO UserRole;
+GRANT SELECT ON Courses TO UserRole;
+GRANT SELECT ON CourseProfessors TO UserRole;
+GRANT SELECT ON Enrollments TO UserRole;
+GRANT SELECT ON Grades TO UserRole;
+
+GO
